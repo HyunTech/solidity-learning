@@ -1,6 +1,6 @@
 // TOken : smart contract based
 // Btc, eth, xrp, kaia : native token
-//SPDX-License-Identifer : MIT
+//SPDX-License-Identifier : MIT
 pragma solidity ^0.8.28;
 
 contract MyToken {
@@ -15,6 +15,15 @@ contract MyToken {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
+        _mint(1 * 10 ** uint256(decimals), msg.sender);
+    }
+
+    //transaction
+    // from, to, data, value, gas, ..
+
+    function _mint(uint256 amount, address owner) internal {
+        totalSupply += amount;
+        balanceOf[owner] += amount;
     }
 
     // function totalSupply() external view returns (uint256) {
