@@ -68,7 +68,6 @@ describe("My Token", () => {
       expect(await myTokenC.balanceOf(signer1.address)).equal(
         hre.ethers.parseUnits("0.5", decimals),
       );
-      expect;
     });
 
     it("should be reverted with insufficient balance error", async () => {
@@ -78,6 +77,65 @@ describe("My Token", () => {
           hre.ethers.parseUnits((mintingAmount + 1n).toString(), decimals),
           signer1.address,
         ),
+      ).to.be.revertedWith("Insufficient balance");
+    });
+  });
+  describe("TransferFrom", () => {
+    it("should emit Approval event", async () => {
+      const signer1 = signers[1];
+      await expect(
+        myTokenC.approve(
+          signer1.address,
+          hre.ethers.parseUnits("10", decimals),
+        ),
+      )
+        .to.emit(myTokenC, "Approval")
+        .withArgs(signer1.address, hre.ethers.parseUnits("10", decimals));
+    });
+    it("should transferFrom signer0 to signer1", async () => {
+      const signer0 = signers[0];
+      const signer1 = signers[1];
+      const amount = hre.ethers.parseUnits("1", decimals);
+
+      await myTokenC.approve(signer1.address, amount);
+
+      await expect(
+        myTokenC
+          .connect(signer1)
+          .transferFrom(signer0.address, signer1.address, amount),
+      )
+        .to.emit(myTokenC, "Transfer")
+        .withArgs(signer0.address, signer1.address, amount);
+
+      expect(await myTokenC.balanceOf(signer1.address)).equal(amount);
+    });
+    it("should be reverted with insufficient allowance error", async () => {
+      const signer0 = signers[0];
+      const signer1 = signers[1];
+      await expect(
+        myTokenC
+          .connect(signer1)
+          .transferFrom(
+            signer0.address,
+            signer1.address,
+            hre.ethers.parseUnits("1", decimals),
+          ),
+      ).to.be.revertedWith("Insufficient allowance");
+    });
+    it("should be reverted when transferFrom amount exceeds balance", async () => {
+      const signer0 = signers[0];
+      const signer1 = signers[1];
+      const amount = hre.ethers.parseUnits(
+        (mintingAmount + 1n).toString(),
+        decimals,
+      );
+
+      await myTokenC.approve(signer1.address, amount);
+
+      await expect(
+        myTokenC
+          .connect(signer1)
+          .transferFrom(signer0.address, signer1.address, amount),
       ).to.be.revertedWith("Insufficient balance");
     });
   });
