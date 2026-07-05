@@ -35,6 +35,7 @@ describe("My Token", () => {
       );
     });
   });
+
   //1MT = 1 * 10^18
   describe("Mint", () => {
     it("should return 1MT balance for signer 0", async () => {
@@ -42,6 +43,15 @@ describe("My Token", () => {
       expect(await myTokenC.balanceOf(signer0)).equal(
         mintingAmount * 10n ** decimals,
       );
+    });
+
+    // TDD : Test driven development
+    it("should return or revert when minting infinitly", async () => {
+      const hacker = signers[2];
+      const mintingAgainAmount = hre.ethers.parseUnits("10000", decimals);
+      await expect(
+        myTokenC.connect(hacker).mint(mintingAgainAmount, hacker.address),
+      ).to.be.revertedWith("You are not authorized to manage this token");
     });
   });
 
