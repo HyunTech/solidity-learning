@@ -42,5 +42,35 @@ describe("TinyBank", () => {
       );
       expect(await tinyBankC.totalstaked()).equal(stakingAmount);
     });
+    describe("Withdraw", () => {
+      it("should return 0 staked after withdrawing total token", async () => {
+        const signer0 = signers[0];
+        const stakingAmount = hre.ethers.parseUnits("50", decimals);
+        await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
+        await tinyBankC.stake(stakingAmount);
+        await tinyBankC.withdraw(stakingAmount);
+        expect(await tinyBankC.staked(signer0.address)).equal(0);
+      });
+    });
+  });
+
+  describe("Reward", () => {
+    it("should reward 1MT every block", async () => {
+      const signer0 = signers[0];
+      const stakingAmount = hre.ethers.parseUnits("50", decimals);
+      await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
+      await tinyBankC.stake(stakingAmount);
+
+      const BLOCKS = 5n;
+      const transferAmount = hre.ethers.parseUnits("1", decimals);
+      for (var i = 0; i < BLOCKS; i++) {
+        await myTokenC.transfer(transferAmount, signer0.address);
+      }
+
+      await tinyBankC.withdraw(stakingAmount);
+      expect(await myTokenC.balanceOf(signer0.address)).equal(
+        hre.ethers.parseUnits((BLOCKS + mintingAmount + 1n).toString()),
+      );
+    });
   });
 });
