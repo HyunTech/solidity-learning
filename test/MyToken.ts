@@ -2,9 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { MyToken } from "../typechain-types";
 import { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types";
-
-const mintingAmount = 100n;
-const decimals = 18n;
+import { mintingAmount, decimals } from "./constant";
 
 describe("My Token", () => {
   let myTokenC: MyToken;
@@ -14,8 +12,8 @@ describe("My Token", () => {
     myTokenC = await hre.ethers.deployContract("MyToken", [
       "MyToken",
       "MT",
-      18,
-      100,
+      decimals,
+      mintingAmount,
     ]);
   });
   describe("Basic state value check", () => {
