@@ -42,6 +42,10 @@ contract MyToken {
         emit Transfer(from, to, amount);
     }
 
+    function mint(uint256 amount, address owner) external {
+        _mint(amount, owner);
+    }
+
     //transaction
     // from, to, data, value, gas, ..
 
