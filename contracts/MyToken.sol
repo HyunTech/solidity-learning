@@ -48,6 +48,10 @@ contract MyToken is ManagedAccess {
         _mint(amount, to);
     }
 
+    function faucet(uint256 amount) external {
+        _mint(amount, msg.sender);
+    }
+
     //transaction
     // from, to, data, value, gas, ..
 

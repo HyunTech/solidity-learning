@@ -38,11 +38,23 @@ describe("My Token", () => {
 
   //1MT = 1 * 10^18
   describe("Mint", () => {
-    it("should return 1MT balance for signer 0", async () => {
+    it("should return initial supply + 1MT balance for signer 0", async () => {
       const signer0 = signers[0];
+      const oneMt = hre.ethers.parseUnits("1", decimals);
+      await myTokenC.mint(oneMt, signer0.address);
+
       expect(await myTokenC.balanceOf(signer0)).equal(
-        mintingAmount * 10n ** decimals,
+        mintingAmount * 10n ** decimals + oneMt,
       );
+    });
+
+    it("should mint faucet amount to caller", async () => {
+      const signer1 = signers[1];
+      const faucetAmount = hre.ethers.parseUnits("100", decimals);
+
+      await myTokenC.connect(signer1).faucet(faucetAmount);
+
+      expect(await myTokenC.balanceOf(signer1.address)).equal(faucetAmount);
     });
 
     // TDD : Test driven development

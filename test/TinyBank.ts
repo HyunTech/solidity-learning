@@ -6,7 +6,6 @@ describe("TinyBank", () => {
   let signers: HardhatEthersSigner[];
   let myTokenC: MyToken;
   let tinyBankC: TinyBank;
-  let managerAddresses: string[];
 
   beforeEach(async () => {
     signers = await hre.ethers.getSigners();
@@ -16,10 +15,8 @@ describe("TinyBank", () => {
       decimals,
       mintingAmount,
     ]);
-    managerAddresses = signers.slice(1, 6).map((signer) => signer.address);
     tinyBankC = await hre.ethers.deployContract("TinyBank", [
       await myTokenC.getAddress(),
-      managerAddresses,
     ]);
     await myTokenC.setManager(await tinyBankC.getAddress());
   });
@@ -39,11 +36,14 @@ describe("TinyBank", () => {
       const signer0 = signers[0];
       const stakingAmount = hre.ethers.parseUnits("50", decimals);
       await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
-      await tinyBankC.stake(stakingAmount);
+      await expect(tinyBankC.stake(stakingAmount))
+        .to.emit(tinyBankC, "Stake")
+        .withArgs(signer0.address, stakingAmount);
       expect(await tinyBankC.staked(signer0.address)).equal(stakingAmount);
       expect(await myTokenC.balanceOf(tinyBankC)).equal(
         await tinyBankC.totalstaked(),
       );
+      expect(await tinyBankC.totalStaked()).equal(stakingAmount);
       expect(await tinyBankC.totalstaked()).equal(stakingAmount);
     });
     describe("Withdraw", () => {
@@ -52,7 +52,9 @@ describe("TinyBank", () => {
         const stakingAmount = hre.ethers.parseUnits("50", decimals);
         await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
         await tinyBankC.stake(stakingAmount);
-        await tinyBankC.withdraw(stakingAmount);
+        await expect(tinyBankC.withdraw(stakingAmount))
+          .to.emit(tinyBankC, "Withdraw")
+          .withArgs(stakingAmount, signer0.address);
         expect(await tinyBankC.staked(signer0.address)).equal(0);
       });
     });
@@ -64,6 +66,7 @@ describe("TinyBank", () => {
       const stakingAmount = hre.ethers.parseUnits("50", decimals);
       await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
       await tinyBankC.stake(stakingAmount);
+      expect(await tinyBankC.currentReward(signer0.address)).equal(0);
 
       const BLOCKS = 5n;
       const transferAmount = hre.ethers.parseUnits("1", decimals);
@@ -78,12 +81,12 @@ describe("TinyBank", () => {
     });
 
     it("should revert when changing rewardPerBlock by hacker", async () => {
-      const hacker = signers[0];
+      const hacker = signers[3];
       const rewardToChange = hre.ethers.parseUnits("10000", decimals);
 
       await expect(
         tinyBankC.connect(hacker).setRewardPerBlock(rewardToChange),
-      ).to.be.revertedWith("You are not a manager");
+      ).to.be.revertedWith("You are not authorized to manage this contract");
     });
   });
 });
